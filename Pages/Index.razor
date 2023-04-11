@@ -1,0 +1,60 @@
+﻿@page "/"
+@inject INewsService newsService
+
+@if (Model == null)
+{
+
+}
+
+else
+{
+    var listData = Model.Skip(SkipValue).Take(TakeValue).ToList();
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            @foreach (var item in listData)
+            {
+                <div class="card">
+                    <div class="card-header text-primary">
+                        <table>
+                            <tr>
+                                <td><img src="@item.TitleImage" class="card-img-top" style="width:150px; height:100px; border-radius:20px;" /></td>
+                                <td><h2>@item.Title</h2></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="card-body">
+                        @{
+                            var PublicationInHtmlMarkup = new MarkupString(item.Publication!);
+                        }
+                        @PublicationInHtmlMarkup
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col-md-2"></div>
+        <SfPager @ref="@Page" PageSize=1 NumericItemsCount=4 TotalItemsCount=Model.Count() ItemClick="Click">
+        </SfPager>
+    </div>
+}
+
+
+
+@code {
+    SfPager Page = new();
+    public int SkipValue { get; set; }
+    public int TakeValue { get; set; } = 1;
+
+    List<News> Model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { Model = await newsService.Get(); } catch (Exception) { }
+    }
+
+    public void Click(PagerItemClickEventArgs args)
+    {
+        SkipValue = (args.CurrentPage * Page.PageSize) - Page.PageSize;
+        TakeValue = Page.PageSize;
+    }
+}
